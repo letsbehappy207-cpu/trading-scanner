@@ -10,7 +10,7 @@ with urllib.request.urlopen(url, timeout=15) as resp:
 
 results = data.get("result", [])
 if not results:
-    print("Belum ada pesan masuk ke bot. Kirim pesan ke bot dulu di Telegram, lalu jalankan ulang workflow ini.")
+    print("::warning::Belum ada pesan masuk ke bot. Kirim pesan ke bot dulu di Telegram, lalu jalankan ulang workflow ini.")
 else:
     seen = set()
     for u in results:
@@ -19,4 +19,4 @@ else:
         if cid and cid not in seen:
             seen.add(cid)
             label = chat.get("first_name") or chat.get("title") or ""
-            print(f"CHAT ID: {cid}  (type: {chat.get('type')}, name: {label})")
+            print(f"::notice title=Telegram Chat ID::{cid} (type: {chat.get('type')}, name: {label})")
