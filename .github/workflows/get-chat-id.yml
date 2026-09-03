@@ -7,21 +7,11 @@ jobs:
   get-chat-id:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Fetch getUpdates and print chat id(s)
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        run: |
-          curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-if not d.get('result'):
-    print('Belum ada pesan masuk ke bot. Kirim pesan ke bot dulu di Telegram, lalu jalankan ulang workflow ini.')
-else:
-    seen = set()
-    for u in d['result']:
-        chat = u.get('message', {}).get('chat', {})
-        cid = chat.get('id')
-        if cid and cid not in seen:
-            seen.add(cid)
-            print(f\"CHAT ID: {cid}  (type: {chat.get('type')}, name/title: {chat.get('first_name', chat.get('title',''))})\")
-"
+        run: python get_chat_id.py
