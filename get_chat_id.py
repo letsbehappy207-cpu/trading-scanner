@@ -3,12 +3,22 @@ import os
 import urllib.request
 
 token = os.environ["TELEGRAM_BOT_TOKEN"]
-url = f"https://api.telegram.org/bot{token}/getUpdates"
 
-with urllib.request.urlopen(url, timeout=15) as resp:
-    data = json.load(resp)
+def call(method):
+    url = f"https://api.telegram.org/bot{token}/{method}"
+    with urllib.request.urlopen(url, timeout=15) as resp:
+        return json.load(resp)
 
+me = call("getMe")
+print(f"::notice title=Bot Info::{me}")
+
+wh = call("getWebhookInfo")
+print(f"::notice title=Webhook Info::{wh}")
+
+data = call("getUpdates")
 results = data.get("result", [])
+print(f"::notice title=Update Count::{len(results)} update(s) found")
+
 if not results:
     print("::warning::Belum ada pesan masuk ke bot. Kirim pesan ke bot dulu di Telegram, lalu jalankan ulang workflow ini.")
 else:
