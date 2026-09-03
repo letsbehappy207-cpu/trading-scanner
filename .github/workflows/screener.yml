@@ -1,0 +1,37 @@
+name: LQ45 Telegram Screener
+
+on:
+  schedule:
+    # 08:30 WIB = 01:30 UTC, Senin-Jumat -> broadcast sinyal pagi
+    - cron: "30 1 * * 1-5"
+    # 16:15 WIB = 09:15 UTC, Senin-Jumat -> rekap penutupan sore
+    - cron: "15 9 * * 1-5"
+  workflow_dispatch: {}   # tombol "Run workflow" manual di tab Actions, buat tes kapan saja
+
+jobs:
+  run-screener:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Tentukan mode (morning/closing) dari jadwal cron
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "15 9 * * 1-5" ]; then
+            echo "mode=closing" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=morning" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Jalankan screener
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py ${{ steps.mode.outputs.mode }}
