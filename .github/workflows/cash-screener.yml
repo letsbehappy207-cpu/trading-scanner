@@ -1,0 +1,37 @@
+name: Top 10 Kas Kuat & Ramai (Rp50-200)
+
+on:
+  schedule:
+    # 05:00 WIB = 22:00 UTC hari sebelumnya, Senin-Jumat WIB -> Minggu-Kamis UTC
+    - cron: "0 22 * * 0-4"
+    # 19:00 WIB = 12:00 UTC, Senin-Jumat
+    - cron: "0 12 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  run-cash-screener:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Tentukan mode (morning/closing) dari jadwal cron
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 12 * * 1-5" ]; then
+            echo "mode=closing" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=morning" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Jalankan cash screener
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python cash_screener.py ${{ steps.mode.outputs.mode }}
