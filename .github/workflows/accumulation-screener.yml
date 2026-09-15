@@ -1,0 +1,25 @@
+name: Kandidat Sedang Diakumulasi (base rapat + volume/OBV naik)
+
+on:
+  schedule:
+    # 05:00 WIB = 22:00 UTC hari sebelumnya, Senin-Jumat WIB
+    - cron: "5 22 * * 0-4"
+    # 19:00 WIB = 12:00 UTC
+    - cron: "5 12 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  run-accumulation-screener:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Jalankan accumulation screener
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python accumulation_screener.py
