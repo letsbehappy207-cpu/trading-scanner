@@ -35,7 +35,10 @@ from tickers_all_idx import ALL_IDX
 
 WIB = datetime.timezone(datetime.timedelta(hours=7))
 BATCH_SIZE = 150
-MIN_AVG_TURNOVER_RP = 300_000_000   # Rp 300 juta/hari -- filter "saham tidur"
+MAX_ORDER_RP = 1_000_000_000         # order terbesar yang mau dieksekusi sekali transaksi
+MIN_AVG_TURNOVER_RP = MAX_ORDER_RP * 15  # turnover harian min 15x order terbesar,
+                                          # supaya Rp500jt-1M sekali beli/jual nggak
+                                          # bikin harga "kabur" (slippage kecil)
 LOOKBACK_DAYS = 90                   # ~4 bulan, periode cek akumulasi
 BASE_WIDTH_MAX_PCT = 25              # range harga max 25% selama periode = "sideways"
 
@@ -132,7 +135,8 @@ def build_message(ranked: list[tuple[str, dict]]) -> str:
         "🎯 *KANDIDAT SEDANG DIAKUMULASI (base rapat + volume/OBV naik)* 🎯",
         f"⏰ {now.strftime('%d/%m/%Y %H:%M')} WIB | Sumber: Yahoo Finance",
         f"Filter: base {LOOKBACK_DAYS}hr terakhir rapat ≤{BASE_WIDTH_MAX_PCT}%, volume periode "
-        f"2 lebih ramai dari periode 1, OBV naik, likuid (turnover ≥ Rp{MIN_AVG_TURNOVER_RP/1e6:.0f}jt/hari)",
+        f"2 lebih ramai dari periode 1, OBV naik, turnover ≥ Rp{MIN_AVG_TURNOVER_RP/1e9:.0f}M/hari "
+        f"(aman utk order sampai Rp{MAX_ORDER_RP/1e6:.0f}jt sekali beli/jual tanpa bikin harga kabur)",
         "",
     ]
     if not ranked:

@@ -28,6 +28,8 @@ WIB = datetime.timezone(datetime.timedelta(hours=7))
 PRICE_MIN, PRICE_MAX = 50, 200
 BATCH_SIZE = 150
 LIQUIDITY_SHORTLIST = 60   # ambil N teratas by turnover dulu, baru cek data kas (lebih cepat)
+MAX_ORDER_RP = 1_000_000_000
+MIN_AVG_TURNOVER_RP = MAX_ORDER_RP * 15   # turnover harian min 15x order terbesar (~Rp15M/hari)
 
 
 def fetch_price_liquidity(tickers: list[str]) -> dict[str, dict]:
@@ -55,7 +57,7 @@ def fetch_price_liquidity(tickers: list[str]) -> dict[str, dict]:
                 prev_close = float(close.iloc[-2])
                 chg_pct = (last_close - prev_close) / prev_close * 100
                 avg_turnover = float((close * vol).iloc[-20:].mean())
-                if PRICE_MIN <= last_close <= PRICE_MAX:
+                if PRICE_MIN <= last_close <= PRICE_MAX and avg_turnover >= MIN_AVG_TURNOVER_RP:
                     out[t] = {
                         "close": last_close,
                         "chg_pct": chg_pct,
@@ -98,7 +100,8 @@ def build_message(mode: str, ranked: list[tuple[str, dict, dict]]) -> str:
     lines = [
         f"💰 *TOP 10 SAHAM KAS KUAT & RAMAI ({title})* 💰",
         f"⏰ {now.strftime('%d/%m/%Y %H:%M')} WIB | Sumber: Yahoo Finance",
-        f"🎯 Filter: harga Rp{PRICE_MIN}-{PRICE_MAX}, turnover tinggi, net cash positif",
+        f"🎯 Filter: harga Rp{PRICE_MIN}-{PRICE_MAX}, turnover ≥ Rp{MIN_AVG_TURNOVER_RP/1e9:.0f}M/hari "
+        f"(aman utk order sampai Rp{MAX_ORDER_RP/1e6:.0f}jt), net cash positif",
         "",
     ]
     if not ranked:
